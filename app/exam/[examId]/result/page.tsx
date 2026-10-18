@@ -23,6 +23,10 @@ interface Question {
   question_text: string
   question_type: string
   options: any[] | null
+  order_index?: number
+  points?: number | null
+  model_answer?: string | null
+  rubric?: string | null
 }
 
 interface Answer {
@@ -79,17 +83,17 @@ export default async function ExamResultPage({
     )
   }
 
-  // Get the latest graded attempt for this user and exam
-  const { data: attempt, error: attemptError } = await supabase
+  // Load the requested attempt, or the latest graded attempt for this exam.
+  let attemptQuery = supabase
     .from('exam_attempts')
     .select('*')
     .eq('user_id', user.id)
     .eq('exam_id', examId)
     .eq('status', 'graded')
-    .eq(attemptId ? 'id' : 'user_id', attemptId || user.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+
+  const { data: attempt, error: attemptError } = await (attemptId
+    ? attemptQuery.eq('id', attemptId).single()
+    : attemptQuery.order('created_at', { ascending: false }).limit(1).single())
 
   if (!attempt) {
     notFound()
@@ -105,8 +109,9 @@ export default async function ExamResultPage({
   // Get questions
   const { data: questions } = await supabase
     .from('questions')
-    .select('*')
+    .select('id, title, question_text, question_type, options, order_index, points, model_answer, rubric')
     .eq('exam_id', examId)
+    .order('order_index', { ascending: true })
 
   // Get answers for this attempt
   const { data: answers } = await supabase
@@ -215,13 +220,13 @@ export default async function ExamResultPage({
               const score = answer?.score
 
               return (
-                <div key={question.id} className="border border-border rounded-lg p-4">
+                <div key={question.id} className="min-w-0 max-w-full overflow-hidden rounded-lg border border-border p-4">
                   <div className="flex items-start gap-3">
                     <span className="font-mono text-accent">
                       {index + 1}.
                     </span>
-                    <div className="flex-1">
-                      <RichTextContent html={question.question_text} className="mb-2 font-medium" />
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <RichTextContent html={question.question_text} className="mb-2 max-w-full break-words font-medium" />
 
                       {/* Show user's answer */}
                       {answer && (
@@ -229,11 +234,11 @@ export default async function ExamResultPage({
                           {question.question_type === 'multiple_choice' || question.question_type === 'true_false' ? (
                             <div className="flex items-center gap-2">
                               {answer.selected_option && (
-                                <div className="flex items-center gap-2">
+                                <div className="flex min-w-0 flex-wrap items-center gap-2">
                                   <span className="text-sm text-muted-foreground">
                                     Jawaban Anda:
                                   </span>
-                                  <span className={`inline-flex items-center gap-1 ${
+                                  <span className={`inline-flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words ${
                                     score === 1 ? 'text-accent' : 'text-destructive'
                                   }`}>
                                     <span className="font-medium">
@@ -255,11 +260,31 @@ export default async function ExamResultPage({
                               <span className="text-sm text-muted-foreground">
                                 Jawaban Anda:
                               </span>
-                              <p className="text-sm p-3 bg-secondary/30 rounded-lg">
-                                {answer.answer_text || <span className="text-muted-foreground">Tidak menjawab</span>}
-                              </p>
+                              <div className="max-w-full overflow-hidden rounded-lg bg-secondary/30 p-3 text-sm break-words [overflow-wrap:anywhere]">
+                                {answer.answer_text ? (
+                                  <RichTextContent html={answer.answer_text} className="max-w-full break-words" />
+                                ) : (
+                                  <span className="text-muted-foreground">Tidak menjawab</span>
+                                )}
+                              </div>
+                              {question.question_type === 'essay' && question.model_answer && (
+                                <div className="mt-3 max-w-full overflow-hidden rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm break-words [overflow-wrap:anywhere]">
+                                  <p className="mb-2 font-medium text-accent">Jawaban benar / jawaban model:</p>
+                                  <RichTextContent html={question.model_answer} className="max-w-full break-words" />
+                                </div>
+                              )}
                             </div>
                           )}
+                        </div>
+                      )}
+
+                      {!answer && (
+                        <p className="mt-3 text-sm text-muted-foreground">Jawaban tidak tersimpan untuk soal ini.</p>
+                      )}
+
+                      {question.question_type === 'essay' && answer && (
+                        <div className="mt-3 text-sm text-muted-foreground">
+                          Nilai essay: <span className="font-medium text-foreground">{score ?? 0}/{question.points ?? 1}</span>
                         </div>
                       )}
 
