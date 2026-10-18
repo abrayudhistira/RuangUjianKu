@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || origin
   const code = searchParams.get('code')
   // if "next" is passed in the URL, use it as the redirect URL
   const next = searchParams.get('next') ?? '/'
 
   if (code) {
-    const response = NextResponse.redirect(`${origin}${next}`)
+    const response = NextResponse.redirect(`${appUrl}${next}`)
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,5 +39,5 @@ export async function GET(request: NextRequest) {
   }
 
   // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  return NextResponse.redirect(`${appUrl}/auth/auth-code-error`)
 }
