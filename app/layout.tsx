@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import NavigationProgress from '@/components/ui/NavigationProgress'
@@ -22,7 +23,9 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <AuthProvider>
-            <NavigationProgress />
+            <Suspense fallback={null}>
+              <NavigationProgress />
+            </Suspense>
             {children}
           </AuthProvider>
         </ThemeProvider>
