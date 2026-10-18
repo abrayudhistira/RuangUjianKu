@@ -1,0 +1,200 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  /* Dark palette */
+  --color-background: #121212;
+  --color-foreground: #e0e0e0;
+  --color-primary: #1e1e1e;
+  --color-on-primary: #ffd700;
+  --color-secondary: #2a2a2a;
+  --color-on-secondary: #e0e0e0;
+  --color-accent: #b71c1c;
+  --color-on-accent: #ffffff;
+  --color-card: #1e1e1e;
+  --color-card-foreground: #e0e0e0;
+  --color-muted: #252525;
+  --color-muted-foreground: #bdbdbd;
+  --color-border: #3a3a3a;
+  --color-destructive: #d32f2f;
+  --color-on-destructive: #ffffff;
+  --color-ring: #ffc107;
+  --color-highlight: #ffc107;
+
+  /* Spacing */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.25rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 2.5rem;
+  --space-3xl: 3rem;
+
+  /* Fonts */
+  --font-sans: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Fira Code', 'Fira Mono', monospace;
+
+  /* Tailwind theme aliases. Keep these names distinct from the source tokens. */
+  --background: #121212;
+  --foreground: #e0e0e0;
+  --primary: #1e1e1e;
+  --on-primary: #ffd700;
+  --secondary: #2a2a2a;
+  --on-secondary: #e0e0e0;
+  --accent: #b71c1c;
+  --on-accent: #ffffff;
+  --card: #1e1e1e;
+  --card-foreground: #e0e0e0;
+  --muted: #252525;
+  --muted-foreground: #bdbdbd;
+  --border: #3a3a3a;
+  --destructive: #d32f2f;
+  --on-destructive: #ffffff;
+  --ring: #ffc107;
+  --highlight: #ffc107;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-background: #f8f9fa;
+  --color-foreground: #424242;
+  --color-primary: #ffffff;
+  --color-on-primary: #212121;
+  --color-secondary: #eeeeee;
+  --color-on-secondary: #212121;
+  --color-accent: #8b0000;
+  --color-on-accent: #ffffff;
+  --color-card: #ffffff;
+  --color-card-foreground: #424242;
+  --color-muted: #f0f0f0;
+  --color-muted-foreground: #616161;
+  --color-border: #d6d6d6;
+  --color-destructive: #b71c1c;
+  --color-on-destructive: #ffffff;
+  --color-ring: #b8860b;
+  --color-highlight: #b8860b;
+  --background: #f8f9fa;
+  --foreground: #424242;
+  --primary: #ffffff;
+  --on-primary: #212121;
+  --secondary: #eeeeee;
+  --on-secondary: #212121;
+  --accent: #8b0000;
+  --on-accent: #ffffff;
+  --card: #ffffff;
+  --card-foreground: #424242;
+  --muted: #f0f0f0;
+  --muted-foreground: #616161;
+  --border: #d6d6d6;
+  --destructive: #b71c1c;
+  --on-destructive: #ffffff;
+  --ring: #b8860b;
+  --highlight: #b8860b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-on-destructive: var(--on-destructive);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+.card {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.rich-text-content p {
+  margin: 0 0 0.75rem;
+}
+
+.rich-text-content p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-content h2,
+.rich-text-content h3 {
+  margin: 1rem 0 0.5rem;
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.rich-text-content ul,
+.rich-text-content ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.rich-text-content blockquote {
+  margin: 0.75rem 0;
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  color: var(--muted-foreground);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, opacity, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-foreground);
+}
