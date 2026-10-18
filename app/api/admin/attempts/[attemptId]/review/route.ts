@@ -17,7 +17,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!attempt) return NextResponse.json({ error: 'Attempt tidak ditemukan' }, { status: 404 })
 
   const { data: questions } = await (supabase as any).from('questions').select('id, points').eq('exam_id', attempt.exam_id)
-  const pointsByQuestion = new Map((questions || []).map((question: any) => [question.id, Number(question.points || 1)]))
+  const pointsByQuestion = new Map<string, number>((questions || []).map((question: any) => [question.id, Number(question.points || 1)] as [string, number]))
 
   for (const review of body.reviews) {
     if (!pointsByQuestion.has(review.question_id)) return NextResponse.json({ error: 'Question tidak sesuai dengan attempt' }, { status: 400 })
