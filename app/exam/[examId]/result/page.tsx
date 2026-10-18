@@ -220,7 +220,14 @@ export default async function ExamResultPage({
               const score = answer?.score
 
               return (
-                <div key={question.id} className="min-w-0 max-w-full overflow-hidden rounded-lg border border-border p-4">
+                <div
+                  key={question.id}
+                  className={`min-w-0 max-w-full overflow-hidden rounded-lg border p-4 ${
+                    answer && (score ?? 0) > 0
+                      ? 'border-green-500/60 bg-green-500/10'
+                      : 'border-border bg-card'
+                  }`}
+                >
                   <div className="flex items-start gap-3">
                     <span className="font-mono text-accent">
                       {index + 1}.
