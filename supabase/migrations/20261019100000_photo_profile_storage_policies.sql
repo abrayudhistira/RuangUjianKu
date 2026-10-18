@@ -1,5 +1,11 @@
 -- Storage policies for the existing `photo-profile` bucket.
 -- Files must be stored under: <authenticated-user-id>/<filename>
+-- These policies may already exist when the bucket was configured manually.
+
+DROP POLICY IF EXISTS "Authenticated users can upload own profile photos" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can update own profile photos" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can delete own profile photos" ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can view profile photos" ON storage.objects;
 
 CREATE POLICY "Authenticated users can upload own profile photos"
 ON storage.objects

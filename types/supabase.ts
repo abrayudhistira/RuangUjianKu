@@ -156,6 +156,11 @@ export type Database = {
           selected_option: string | null
           answer_text: string | null
           score: number | null
+          manual_score: number | null
+          review_note: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          needs_review: boolean
           graded_by: string | null
           created_at: string
           updated_at: string
@@ -167,6 +172,11 @@ export type Database = {
           selected_option?: string | null
           answer_text?: string | null
           score?: number | null
+          manual_score?: number | null
+          review_note?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          needs_review?: boolean
           graded_by?: string | null
           created_at?: string
           updated_at?: string
@@ -178,6 +188,11 @@ export type Database = {
           selected_option?: string | null
           answer_text?: string | null
           score?: number | null
+          manual_score?: number | null
+          review_note?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          needs_review?: boolean
           graded_by?: string | null
           created_at?: string
           updated_at?: string
