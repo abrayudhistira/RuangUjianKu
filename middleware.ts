@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
   if (
     request.nextUrl.pathname.startsWith('/_next') ||
     request.nextUrl.pathname.startsWith('/api') ||
-    request.nextUrl.pathname.startsWith('/favicon.ico')
+    (request.nextUrl.pathname.startsWith('/favicon.ico') || request.nextUrl.pathname.startsWith('/app-icon.png') || request.nextUrl.pathname.startsWith('/google-icon.png'))
   ) {
     return NextResponse.next()
   }

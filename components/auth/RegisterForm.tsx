@@ -143,7 +143,7 @@ export default function RegisterForm() {
         className="w-full py-3 px-4 bg-secondary hover:bg-secondary/80 text-on-secondary font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         <img
-          src="/google-icon.png"
+          src="/google-icon.png?v=2"
           alt=""
           aria-hidden="true"
           className="h-5 w-5 object-contain"

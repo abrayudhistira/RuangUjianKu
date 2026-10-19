@@ -94,7 +94,7 @@ export default function LoginForm() {
         className="min-h-12 w-full rounded-xl border border-border bg-secondary/40 px-4 py-3 font-semibold text-on-secondary transition hover:-translate-y-0.5 hover:bg-secondary/70 flex items-center justify-center gap-2"
       >
         <img
-          src="/google-icon.png"
+          src="/google-icon.png?v=2"
           alt=""
           aria-hidden="true"
           className="h-5 w-5 object-contain"

@@ -1,6 +1,6 @@
 import LoginForm from '@/components/auth/LoginForm'
 import Link from 'next/link'
-import { ClipboardCheck, ShieldCheck, Timer } from 'lucide-react'
+import { ShieldCheck, Timer } from 'lucide-react'
 import ThemeToggle from '@/components/theme/ThemeToggle'
 
 export default function LoginPage() {
@@ -9,8 +9,8 @@ export default function LoginPage() {
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center gap-8 lg:grid-cols-[1fr_460px] lg:gap-16">
         <section className="hidden lg:block" aria-label="Tentang Ruang UjianKu">
           <Link href="/" className="inline-flex items-center gap-3 text-foreground">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-on-accent shadow-lg shadow-accent/20">
-              <ClipboardCheck className="h-6 w-6" aria-hidden="true" />
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl dark:bg-white">
+              <img src="/app-icon.png" alt="Ruang UjianKu" className="h-full w-full rounded-2xl object-contain" />
             </span>
             <span className="text-xl font-bold tracking-tight">Ruang UjianKu</span>
           </Link>
@@ -43,9 +43,9 @@ export default function LoginPage() {
           </div>
           <div className="mb-8 text-center lg:hidden">
             <Link href="/" className="inline-flex items-center gap-3 text-foreground">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-on-accent shadow-lg shadow-accent/20">
-                <ClipboardCheck className="h-6 w-6" aria-hidden="true" />
-              </span>
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl dark:bg-white">
+              <img src="/app-icon.png" alt="Ruang UjianKu" className="h-full w-full rounded-2xl object-contain" />
+            </span>
               <span className="text-xl font-bold tracking-tight">Ruang UjianKu</span>
             </Link>
           </div>

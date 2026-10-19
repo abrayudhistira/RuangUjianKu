@@ -9,7 +9,9 @@ export const metadata: Metadata = {
   title: 'Ruang UjianKu',
   description: 'Aplikasi ujian online berbasis web',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/app-icon.png',
+    shortcut: '/app-icon.png',
+    apple: '/app-icon.png',
   },
 }
 
