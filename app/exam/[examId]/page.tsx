@@ -240,10 +240,13 @@ export default function ExamPage() {
         setAnswers(answersMap)
       }
     } else {
+      // Access-code verification succeeded. Pause only for identity confirmation;
+      // do not report failure or the unlock modal will reopen in a loop.
       setPendingExamData(examData)
       setShowNameModal(true)
+      setShowUnlockModal(false)
       setLoading(false)
-      return false
+      return true
     }
 
     setLoading(false)
