@@ -324,7 +324,7 @@ export default async function ExamResultPage({
               )
             })}
           </div>
-        </div>
+        </div>}
 
         {/* Action Buttons */}
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
