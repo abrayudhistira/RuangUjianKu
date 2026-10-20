@@ -120,6 +120,7 @@ export type Database = {
           id: string
           user_id: string
           exam_id: string
+          participant_name: string | null
           started_at: string
           submitted_at: string | null
           score: number | null
@@ -133,6 +134,7 @@ export type Database = {
           id?: string
           user_id: string
           exam_id: string
+          participant_name?: string | null
           started_at?: string
           submitted_at?: string | null
           score?: number | null
@@ -146,6 +148,7 @@ export type Database = {
           id?: string
           user_id?: string
           exam_id?: string
+          participant_name?: string | null
           started_at?: string
           submitted_at?: string | null
           score?: number | null

@@ -24,7 +24,8 @@ interface ExamAttempt {
   started_at: string
   submitted_at: string | null
   score: number | null
-  status: 'in_progress' | 'submitted' | 'graded'
+  participant_name: string | null
+  status: 'in_progress' | 'submitted' | 'under_review' | 'graded'
   time_left?: number
 }
 
@@ -119,6 +120,9 @@ export default function ExamPage() {
   const [timeLeft, setTimeLeft] = useState(0)
   const [attemptId, setAttemptId] = useState<string | null>(null)
   const [showUnlockModal, setShowUnlockModal] = useState(false)
+  const [showNameModal, setShowNameModal] = useState(false)
+  const [participantName, setParticipantName] = useState('')
+  const [pendingExamData, setPendingExamData] = useState<any>(null)
   const [isUnlocked, setIsUnlocked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [questionOrder, setQuestionOrder] = useState<string[]>([])
@@ -153,6 +157,13 @@ export default function ExamPage() {
     }
 
     setExam(examData)
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('full_name')
+      .eq('id', user.id)
+      .single()
+    setParticipantName(profile?.full_name || '')
 
     // Check if exam is within time window first; a locked exam can still be opened
     // during its active window so the participant can enter the access code.
@@ -212,6 +223,7 @@ export default function ExamPage() {
 
     if (existingAttempt) {
       setAttemptId(existingAttempt.id)
+      setParticipantName(existingAttempt.participant_name || profile?.full_name || '')
       setTimeLeft(existingAttempt.time_left || examData.duration_minutes * 60)
 
       // Load existing answers
@@ -228,32 +240,48 @@ export default function ExamPage() {
         setAnswers(answersMap)
       }
     } else {
-      // Create new attempt
-      const { data: newAttempt, error: attemptError } = await supabase
-        .from('exam_attempts')
-        .insert({
-          user_id: user.id,
-          exam_id: examId,
-          started_at: new Date().toISOString(),
-          status: 'in_progress',
-          time_left: examData.duration_minutes * 60,
-        })
-        .select()
-        .single()
-
-      if (attemptError) {
-        alert('Gagal memulai ujian')
-        setLoading(false)
-        return false
-      }
-
-      setAttemptId(newAttempt.id)
-      setTimeLeft(examData.duration_minutes * 60) // in seconds
+      setPendingExamData(examData)
+      setShowNameModal(true)
+      setLoading(false)
+      return false
     }
 
     setLoading(false)
     return true
   }, [supabase, examId, router])
+
+  const handleParticipantNameSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const normalizedName = participantName.trim()
+    if (normalizedName.length < 3 || !pendingExamData) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return router.push('/auth/login')
+
+    const { data: newAttempt, error } = await supabase
+      .from('exam_attempts')
+      .insert({
+        user_id: user.id,
+        exam_id: examId,
+        participant_name: normalizedName,
+        started_at: new Date().toISOString(),
+        status: 'in_progress',
+        time_left: pendingExamData.duration_minutes * 60,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      alert('Gagal memulai ujian')
+      return
+    }
+
+    setParticipantName(normalizedName)
+    setAttemptId(newAttempt.id)
+    setTimeLeft(pendingExamData.duration_minutes * 60)
+    setPendingExamData(null)
+    setShowNameModal(false)
+  }
 
   // Handle unlock key
   const handleUnlockSubmit = async (key: string) => {
@@ -493,6 +521,22 @@ export default function ExamPage() {
       </header>
 
       {/* Unlock Modal */}
+      {showNameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+          <form onSubmit={handleParticipantNameSubmit} className="card w-full max-w-md space-y-5 p-6 sm:p-8">
+            <div>
+              <h3 className="text-xl font-semibold">Konfirmasi Identitas Peserta</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Nama ini akan dicatat pada hasil ujian.</p>
+            </div>
+            <div>
+              <label htmlFor="participant-name" className="mb-2 block text-sm font-medium">Nama lengkap</label>
+              <input id="participant-name" autoFocus required minLength={3} value={participantName} onChange={(event) => setParticipantName(event.target.value)} className="min-h-11 w-full rounded-lg border border-border bg-secondary/50 px-4 py-3" />
+            </div>
+            <button type="submit" disabled={participantName.trim().length < 3} className="min-h-11 w-full rounded-lg bg-accent px-4 py-3 font-semibold text-on-accent disabled:cursor-not-allowed disabled:opacity-50">Mulai Ujian</button>
+          </form>
+        </div>
+      )}
+
       <UnlockModal
         isOpen={showUnlockModal}
         onClose={() => undefined}

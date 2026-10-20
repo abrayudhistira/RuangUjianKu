@@ -33,7 +33,11 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { exam_id } = body
+    const { exam_id, participant_name } = body
+    const normalizedParticipantName = typeof participant_name === 'string' ? participant_name.trim() : ''
+    if (normalizedParticipantName.length < 3) {
+      return NextResponse.json({ error: 'Nama lengkap minimal 3 karakter' }, { status: 400 })
+    }
 
     if (!exam_id) {
       return NextResponse.json({ error: 'exam_id is required' }, { status: 400 })
@@ -73,6 +77,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         exam_id,
+        participant_name: normalizedParticipantName,
         started_at: new Date().toISOString(),
         status: 'in_progress',
         time_left: exam.duration_minutes * 60, // in seconds

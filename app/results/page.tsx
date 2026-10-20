@@ -11,6 +11,7 @@ interface Attempt {
   submitted_at: string | null
   score: number | null
   is_passed: boolean | null
+  participant_name: string | null
   status: string
   time_left: number | null
   exams: {
@@ -135,6 +136,7 @@ export default async function ResultsPage() {
                         <h3 className="text-lg font-semibold">
                           {attempt.exams?.title || 'Ujian'}
                         </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">Peserta: {attempt.participant_name || user.email}</p>
                         {isUnderReview ? (
                           <span className="px-2 py-1 bg-muted rounded-full text-xs font-medium text-muted-foreground">Sedang Dinilai</span>
                         ) : attempt.status === 'graded' && passed ? (
