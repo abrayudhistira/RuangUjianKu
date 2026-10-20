@@ -16,6 +16,9 @@ type Exam = {
   start_time: string | null
   end_time: string | null
   passing_score: number
+  grading_mode: 'automatic' | 'manual'
+  show_correct_answers: boolean
+  show_incorrect_answers: boolean
 }
 
 interface ExamFormProps {
@@ -39,6 +42,9 @@ export default function ExamForm({ exam }: ExamFormProps) {
     exam?.end_time ? new Date(exam.end_time).toISOString().slice(0, 16) : ''
   )
   const [passingScore, setPassingScore] = useState(exam?.passing_score || 60)
+  const [gradingMode, setGradingMode] = useState<'automatic' | 'manual'>(exam?.grading_mode || 'automatic')
+  const [showCorrectAnswers, setShowCorrectAnswers] = useState(exam?.show_correct_answers ?? false)
+  const [showIncorrectAnswers, setShowIncorrectAnswers] = useState(exam?.show_incorrect_answers ?? false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -60,6 +66,9 @@ export default function ExamForm({ exam }: ExamFormProps) {
         start_time: toDatabaseTimestamp(startTime),
         end_time: toDatabaseTimestamp(endTime),
         passing_score: passingScore,
+        grading_mode: gradingMode,
+        show_correct_answers: showCorrectAnswers,
+        show_incorrect_answers: showIncorrectAnswers,
       }
 
       if (isEditing && exam) {
@@ -215,6 +224,28 @@ export default function ExamForm({ exam }: ExamFormProps) {
             className="w-full min-h-11 px-4 py-3 rounded-lg bg-secondary/50 border border-border focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
+
+        <fieldset className="md:col-span-2 rounded-xl border border-border p-4">
+          <legend className="px-1 text-sm font-semibold">Pengaturan penilaian</legend>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            <label className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2">
+              <input type="radio" name="gradingMode" value="automatic" checked={gradingMode === 'automatic'} onChange={() => setGradingMode('automatic')} />
+              <span className="text-sm">Nilai otomatis</span>
+            </label>
+            <label className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2">
+              <input type="radio" name="gradingMode" value="manual" checked={gradingMode === 'manual'} onChange={() => setGradingMode('manual')} />
+              <span className="text-sm">Nilai manual</span>
+            </label>
+            <label className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2">
+              <input type="checkbox" checked={showCorrectAnswers} onChange={(e) => setShowCorrectAnswers(e.target.checked)} />
+              <span className="text-sm">Tampilkan jawaban benar</span>
+            </label>
+            <label className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2">
+              <input type="checkbox" checked={showIncorrectAnswers} onChange={(e) => setShowIncorrectAnswers(e.target.checked)} />
+              <span className="text-sm">Tampilkan jawaban salah</span>
+            </label>
+          </div>
+        </fieldset>
       </div>
 
       <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-border">

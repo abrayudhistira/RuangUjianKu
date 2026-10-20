@@ -69,7 +69,7 @@ export default async function ResultsPage() {
   const results = attempts as Attempt[] | null
 
   // Calculate stats
-  const totalAttempts = results?.filter((a) => a.status === 'submitted' || a.status === 'graded').length || 0
+  const totalAttempts = results?.filter((a) => a.status === 'under_review' || a.status === 'submitted' || a.status === 'graded').length || 0
   const passed = results?.filter((a) => a.is_passed).length || 0
   const failed = results?.filter((a) => a.is_passed === false).length || 0
 
@@ -124,7 +124,8 @@ export default async function ResultsPage() {
           <div className="space-y-4">
             {results.map((attempt) => {
               const passed = attempt.is_passed === true
-              const isComplete = attempt.status === 'submitted' || attempt.status === 'graded'
+              const isUnderReview = attempt.status === 'under_review' || attempt.status === 'submitted'
+              const isComplete = isUnderReview || attempt.status === 'graded'
 
               return (
                 <div key={attempt.id} className="card p-6">
@@ -134,16 +135,12 @@ export default async function ResultsPage() {
                         <h3 className="text-lg font-semibold">
                           {attempt.exams?.title || 'Ujian'}
                         </h3>
-                        {isComplete ? (
-                          passed ? (
-                            <span className="px-2 py-1 bg-accent/10 text-accent rounded-full text-xs font-medium">
-                            Lulus
-                          </span>
-                          ) : (
-                            <span className="px-2 py-1 bg-destructive/10 text-destructive rounded-full text-xs font-medium">
-                            Tidak Lulus
-                          </span>
-                          )
+                        {isUnderReview ? (
+                          <span className="px-2 py-1 bg-muted rounded-full text-xs font-medium text-muted-foreground">Sedang Dinilai</span>
+                        ) : attempt.status === 'graded' && passed ? (
+                          <span className="px-2 py-1 bg-accent/10 text-accent rounded-full text-xs font-medium">Lulus</span>
+                        ) : attempt.status === 'graded' ? (
+                          <span className="px-2 py-1 bg-destructive/10 text-destructive rounded-full text-xs font-medium">Tidak Lulus</span>
                         ) : (
                           <span className="px-2 py-1 bg-muted/50 text-muted-foreground rounded-full text-xs">
                             Dalam Pengerjaan
@@ -163,7 +160,7 @@ export default async function ResultsPage() {
                         <div>
                           <span className="text-muted-foreground">Nilai:</span>
                           <span className="font-medium ml-1">
-                            {attempt.score !== null ? `${attempt.score}/100` : '-'}
+                            {attempt.status === 'graded' && attempt.score !== null ? `${attempt.score}/100` : '-'}
                           </span>
                         </div>
                         {attempt.submitted_at && (
@@ -180,7 +177,7 @@ export default async function ResultsPage() {
                         )}
                         <div>
                           <span className="text-muted-foreground">Status:</span>
-                          <span className="font-medium ml-1">{attempt.status}</span>
+                          <span className="font-medium ml-1">{isUnderReview ? 'Sedang Dinilai' : attempt.status === 'graded' ? (passed ? 'Lulus' : 'Tidak Lulus') : 'Dalam Pengerjaan'}</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Nilai Lulus:</span>

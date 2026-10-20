@@ -83,6 +83,9 @@ export default async function EditExamPage({ params }: EditExamPageProps) {
     start_time: exam.start_time ? new Date(exam.start_time).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }).replace(' ', 'T') : '',
     end_time: exam.end_time ? new Date(exam.end_time).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' }).replace(' ', 'T') : '',
     passing_score: exam.passing_score,
+    grading_mode: exam.grading_mode || 'automatic',
+    show_correct_answers: exam.show_correct_answers ?? false,
+    show_incorrect_answers: exam.show_incorrect_answers ?? false,
   }
 
   return (

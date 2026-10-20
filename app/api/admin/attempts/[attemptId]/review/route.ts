@@ -47,7 +47,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const total = (answers || []).reduce((sum: number, answer: any) => sum + Number(answer.manual_score ?? answer.score ?? 0), 0)
   const max = (questions || []).reduce((sum: number, question: any) => sum + Number(question.points || 1), 0)
   const percentage = max ? Math.round((total / max) * 100) : 0
-  const { data: exam } = await (supabase as any).from('exams').select('passing_score').eq('id', attempt.exam_id).single()
+  const { data: exam } = await (supabase as any).from('exams').select('passing_score, grading_mode').eq('id', attempt.exam_id).single()
   const { error: attemptError } = await (supabase as any).from('exam_attempts').update({ score: percentage, is_passed: percentage >= (exam?.passing_score || 0), status: 'graded' }).eq('id', attemptId)
   if (attemptError) return NextResponse.json({ error: attemptError.message }, { status: 500 })
 

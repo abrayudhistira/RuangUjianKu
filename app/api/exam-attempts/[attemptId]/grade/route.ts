@@ -65,6 +65,10 @@ export async function POST(
     return NextResponse.json({ error: 'Exam not found' }, { status: 404 })
   }
 
+  if (exam.grading_mode === 'manual') {
+    return NextResponse.json({ success: true, underReview: true, message: 'Menunggu penilaian manual.' })
+  }
+
   // Get all questions for this exam
   const { data: questions } = await supabase
     .from('questions')

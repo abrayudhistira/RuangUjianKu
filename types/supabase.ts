@@ -12,6 +12,9 @@ export type Database = {
           start_time: string | null
           end_time: string | null
           passing_score: number
+          grading_mode: 'automatic' | 'manual'
+          show_correct_answers: boolean
+          show_incorrect_answers: boolean
           created_at: string
           updated_at: string
         }
@@ -25,6 +28,9 @@ export type Database = {
           start_time?: string | null
           end_time?: string | null
           passing_score?: number
+          grading_mode?: 'automatic' | 'manual'
+          show_correct_answers?: boolean
+          show_incorrect_answers?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -38,6 +44,9 @@ export type Database = {
           start_time?: string | null
           end_time?: string | null
           passing_score?: number
+          grading_mode?: 'automatic' | 'manual'
+          show_correct_answers?: boolean
+          show_incorrect_answers?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -115,7 +124,7 @@ export type Database = {
           submitted_at: string | null
           score: number | null
           is_passed: boolean | null
-          status: 'in_progress' | 'submitted' | 'graded'
+          status: 'in_progress' | 'submitted' | 'under_review' | 'graded'
           time_left: number | null
           created_at: string
           updated_at: string
@@ -128,7 +137,7 @@ export type Database = {
           submitted_at?: string | null
           score?: number | null
           is_passed?: boolean | null
-          status?: 'in_progress' | 'submitted' | 'graded'
+          status?: 'in_progress' | 'submitted' | 'under_review' | 'graded'
           time_left?: number | null
           created_at?: string
           updated_at?: string
@@ -141,7 +150,7 @@ export type Database = {
           submitted_at?: string | null
           score?: number | null
           is_passed?: boolean | null
-          status?: 'in_progress' | 'submitted' | 'graded'
+          status?: 'in_progress' | 'submitted' | 'under_review' | 'graded'
           time_left?: number | null
           created_at?: string
           updated_at?: string

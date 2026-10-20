@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
-import { CheckCircle, XCircle, Timer, BarChart3, Home, RefreshCw } from 'lucide-react'
+import { CheckCircle, XCircle, Timer, BarChart3, Home, RefreshCw, Clock } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import RefreshResultButton from '@/components/exam/RefreshResultButton'
 import UserHeader from '@/components/user/UserHeader'
@@ -89,7 +89,7 @@ export default async function ExamResultPage({
     .select('*')
     .eq('user_id', user.id)
     .eq('exam_id', examId)
-    .eq('status', 'graded')
+    .in('status', ['under_review', 'submitted', 'graded'])
 
   const { data: attempt, error: attemptError } = await (attemptId
     ? attemptQuery.eq('id', attemptId).single()
@@ -131,15 +131,19 @@ export default async function ExamResultPage({
   const timeSpentMin = Math.floor(timeSpentMs / 60000)
   const timeSpentSec = Math.floor((timeSpentMs % 60000) / 1000)
 
+  const isUnderReview = attempt.status !== 'graded'
   const score = attempt.score ?? 0
-  const passed = attempt.is_passed ?? false
+  const passed = attempt.is_passed === true
   const passingScore = exam.passing_score
 
   // Count question stats
   const totalQuestions = questions?.length || 0
-  const correctAnswers = answers?.filter((a: Answer) => (a.score ?? 0) > 0).length || 0
-  const wrongAnswers = answers?.filter((a: Answer) => (a.score ?? 0) === 0).length || 0
-  const unanswered = totalQuestions - (correctAnswers + wrongAnswers)
+  const canShowReview = !isUnderReview
+  const canShowCorrectAnswers = canShowReview && exam.show_correct_answers === true
+  const canShowIncorrectAnswers = canShowReview && exam.show_incorrect_answers === true
+  const correctAnswers = canShowReview ? answers?.filter((a: Answer) => (a.score ?? 0) > 0).length || 0 : 0
+  const wrongAnswers = canShowReview ? answers?.filter((a: Answer) => (a.score ?? 0) === 0).length || 0 : 0
+  const unanswered = canShowReview ? totalQuestions - (correctAnswers + wrongAnswers) : 0
 
   return (
     <div className="min-h-screen bg-background">
@@ -150,18 +154,19 @@ export default async function ExamResultPage({
         {/* Result Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full mb-4">
-            {passed ? (
+            {isUnderReview ? (
+              <Clock className="w-16 h-16 text-muted-foreground" />
+            ) : passed ? (
               <CheckCircle className="w-16 h-16 text-accent" />
             ) : (
               <XCircle className="w-16 h-16 text-destructive" />
             )}
           </div>
           <h1 className="text-3xl font-bold mb-2">
-            {passed ? 'Selamat! Anda Lulus!' : 'Anda Belum Lulus'}
+            {isUnderReview ? 'Sedang Dinilai' : passed ? 'Selamat! Anda Lulus!' : 'Anda Belum Lulus'}
           </h1>
           <p className="text-muted-foreground">
-            Nilai Anda: <span className="font-bold text-foreground">{score}</span>/100
-            (Butuh {passingScore} untuk lulus)
+            {isUnderReview ? 'Hasil akhir akan tampil setelah penilaian selesai.' : <>Nilai Anda: <span className="font-bold text-foreground">{score}</span>/100 (Butuh {passingScore} untuk lulus)</>}
           </p>
         </div>
 
@@ -185,8 +190,14 @@ export default async function ExamResultPage({
           </div>
         </div>
 
+        {!canShowReview && (
+          <div className="card mb-8 border border-accent/30 bg-accent/5 p-5 text-center text-sm text-muted-foreground">
+            Jawaban dan nilai akhir akan ditampilkan setelah proses penilaian selesai.
+          </div>
+        )}
+
         {/* Score Breakdown */}
-        <div className="card p-6 mb-8">
+        {canShowReview && <div className="card p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Ringkasan Nilai</h2>
 
           <div className="space-y-4">
@@ -208,10 +219,10 @@ export default async function ExamResultPage({
               <span className="font-medium">{passingScore}%</span>
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* Answer Review */}
-        <div className="card p-6">
+        {canShowReview && <div className="card p-6">
           <h2 className="text-xl font-semibold mb-4">Review Jawaban</h2>
 
           <div className="space-y-4">
@@ -246,18 +257,17 @@ export default async function ExamResultPage({
                                     Jawaban Anda:
                                   </span>
                                   <span className={`inline-flex min-w-0 max-w-full flex-wrap items-center gap-1 break-words ${
-                                    score === 1 ? 'text-accent' : 'text-destructive'
+                                    ((score ?? 0) > 0 && canShowCorrectAnswers) || ((score ?? 0) === 0 && canShowIncorrectAnswers)
+                                      ? ((score ?? 0) > 0 ? 'text-accent' : 'text-destructive')
+                                      : 'text-foreground'
                                   }`}>
                                     <span className="font-medium">
                                       {question.options?.find(
                                         (o: any) => o.label === answer.selected_option
                                       )?.text || answer.selected_option}
                                     </span>
-                                    {score === 1 ? (
-                                      <CheckCircle className="w-4 h-4" />
-                                    ) : (
-                                      <XCircle className="w-4 h-4" />
-                                    )}
+                                    {((score ?? 0) > 0 && canShowCorrectAnswers) && <CheckCircle className="w-4 h-4" />}
+                                    {((score ?? 0) === 0 && canShowIncorrectAnswers) && <XCircle className="w-4 h-4" />}
                                   </span>
                                 </div>
                               )}
@@ -274,9 +284,9 @@ export default async function ExamResultPage({
                                   <span className="text-muted-foreground">Tidak menjawab</span>
                                 )}
                               </div>
-                              {question.question_type === 'essay' && question.model_answer && (
+                              {question.question_type === 'essay' && question.model_answer && canShowCorrectAnswers && (
                                 <div className="mt-3 max-w-full overflow-hidden rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm break-words [overflow-wrap:anywhere]">
-                                  <p className="mb-2 font-medium text-accent">Jawaban benar / jawaban model:</p>
+                                  <p className="mb-2 font-medium text-accent">Jawaban model:</p>
                                   <RichTextContent html={question.model_answer} className="max-w-full break-words" />
                                 </div>
                               )}
@@ -296,13 +306,17 @@ export default async function ExamResultPage({
                       )}
 
                       {/* Show correct answer for choice-based */}
-                      {score === 0 && answer && (question.question_type === 'multiple_choice' || question.question_type === 'true_false') && (
+                      {canShowCorrectAnswers && answer && (question.question_type === 'multiple_choice' || question.question_type === 'true_false') && (
                         <div className="mt-2 text-sm">
                           <span className="text-muted-foreground">Jawaban benar: </span>
                           <span className="text-accent font-medium">
-                            {question.options?.find((o: any) => o.is_correct)?.label}
+                            {question.options?.find((o: any) => o.is_correct)?.text || question.options?.find((o: any) => o.is_correct)?.label || '-'}
                           </span>
                         </div>
+                      )}
+
+                      {canShowIncorrectAnswers && answer && (score ?? 0) === 0 && (
+                        <p className="mt-2 text-sm text-destructive">Jawaban Anda belum tepat.</p>
                       )}
                     </div>
                   </div>

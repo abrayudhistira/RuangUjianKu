@@ -53,12 +53,20 @@ export async function POST(
       return NextResponse.json({ error: 'Attempt already submitted' }, { status: 400 })
     }
 
-    // Update attempt status
-    const { error } = await supabase
+    const { data: exam } = await (supabase as any)
+      .from('exams')
+      .select('grading_mode')
+      .eq('id', attempt.exam_id)
+      .single()
+
+    // Keep every submitted attempt under review until grading is finalized.
+    const { error } = await (supabase as any)
       .from('exam_attempts')
       .update({
         submitted_at: new Date().toISOString(),
-        status: 'submitted',
+        score: null,
+        is_passed: null,
+        status: 'under_review',
       })
       .eq('id', attemptId)
 
@@ -66,13 +74,15 @@ export async function POST(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Trigger auto-grading in background
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/exam-attempts/${attemptId}/grade`, {
+    // Trigger grading only when this exam is configured for automatic scoring.
+    if (exam?.grading_mode !== 'manual') {
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/exam-attempts/${attemptId}/grade`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-    }).catch((err) => console.error('Grading failed:', err))
+      }).catch((err) => console.error('Grading failed:', err))
+    }
 
     return NextResponse.json({
       success: true,

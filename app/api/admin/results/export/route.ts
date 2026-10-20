@@ -19,7 +19,16 @@ export async function GET(request: NextRequest) {
   const { data: attempts, error } = await (supabase as any).from('exam_attempts').select('id, status, score, is_passed, started_at, submitted_at, users(email, full_name)').eq('exam_id', examId).order('created_at', { ascending: false })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   const rows = [['Nama peserta', 'Email', 'Ujian', 'Attempt ID', 'Status', 'Nilai', 'Lulus', 'Mulai', 'Dikumpulkan']]
-  for (const attempt of attempts || []) rows.push([attempt.users?.full_name || '', attempt.users?.email || '', exam.title, attempt.id, attempt.status, attempt.score ?? '', attempt.is_passed === true ? 'Ya' : attempt.is_passed === false ? 'Tidak' : '', attempt.started_at, attempt.submitted_at || ''])
+  for (const attempt of attempts || []) {
+    const status = attempt.status === 'under_review' || attempt.status === 'submitted'
+      ? 'Sedang Dinilai'
+      : attempt.status === 'graded' && attempt.is_passed === true
+        ? 'Lulus'
+        : attempt.status === 'graded'
+          ? 'Tidak Lulus'
+          : 'Dalam Pengerjaan'
+    rows.push([attempt.users?.full_name || '', attempt.users?.email || '', exam.title, attempt.id, status, attempt.score ?? '', attempt.is_passed === true ? 'Ya' : attempt.is_passed === false ? 'Tidak' : '', attempt.started_at, attempt.submitted_at || ''])
+  }
   const body = '﻿' + rows.map((row) => row.map(csv).join(',')).join('\r\n') + '\r\n'
   return new NextResponse(body, { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="hasil-${examId}.csv"`, 'Cache-Control': 'no-store' } })
 }
