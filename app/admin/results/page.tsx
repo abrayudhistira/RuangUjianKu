@@ -5,6 +5,7 @@ import { BarChart3, Download, User, ChevronLeft, ChevronRight } from 'lucide-rea
 import AdminHeader from '@/components/admin/AdminHeader'
 
 const PAGE_SIZE = 20
+export const dynamic = 'force-dynamic'
 
 export default async function AdminResultsPage({ searchParams }: { searchParams: Promise<{ exam?: string; page?: string }> }) {
   const query = await searchParams

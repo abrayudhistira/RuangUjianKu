@@ -117,8 +117,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const percentage = max ? Math.round((total / max) * 100) : 0
   console.log('[AdminReview] calculation', { attemptId, rows: calculationRows, total, max, percentage })
   const { data: exam } = await (supabase as any).from('exams').select('passing_score, grading_mode').eq('id', attempt.exam_id).single()
-  const { error: attemptError } = await (supabase as any).from('exam_attempts').update({ score: percentage, is_passed: percentage >= (exam?.passing_score || 0), status: 'graded' }).eq('id', attemptId)
+  const { data: updatedAttempt, error: attemptError } = await (supabase as any)
+    .from('exam_attempts')
+    .update({ score: percentage, is_passed: percentage >= (exam?.passing_score || 0), status: 'graded' })
+    .eq('id', attemptId)
+    .select('id, score, is_passed, status')
+    .maybeSingle()
+  console.log('[AdminReview] attempt result update', {
+    attemptId,
+    requested: { score: percentage, isPassed: percentage >= (exam?.passing_score || 0), status: 'graded' },
+    updatedAttempt,
+    error: attemptError?.message ?? null,
+  })
   if (attemptError) return NextResponse.json({ error: attemptError.message }, { status: 500 })
+  if (!updatedAttempt) return NextResponse.json({ error: 'Hasil attempt tidak dapat diperbarui. Pastikan migration policy admin sudah diterapkan.' }, { status: 409 })
 
-  return NextResponse.json({ success: true, score: percentage })
+  return NextResponse.json({ success: true, score: updatedAttempt.score })
 }
