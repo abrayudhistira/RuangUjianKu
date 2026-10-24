@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import AdminToast from '@/components/admin/AdminToast'
 import RichTextContent from '@/components/editor/RichTextContent'
 
 type ReviewQuestion = {
@@ -16,9 +18,16 @@ type ReviewQuestion = {
 }
 
 export default function AdminAttemptReview({ attemptId, participant, examTitle, questions }: { attemptId: string; participant: string; examTitle: string; questions: ReviewQuestion[] }) {
+  const router = useRouter()
   const [reviews, setReviews] = useState(() => Object.fromEntries(questions.map((question) => [question.id, { manual_score: question.answer?.manual_score ?? '', review_note: question.answer?.review_note ?? '', needs_review: question.answer?.needs_review ?? false }])))
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [successToast, setSuccessToast] = useState<string | null>(null)
+
+  const closeSuccessToast = useCallback(() => {
+    setSuccessToast(null)
+    router.push('/admin/results')
+  }, [router])
 
   function update(id: string, field: string, value: string | boolean) {
     setReviews((current) => ({ ...current, [id]: { ...current[id], [field]: value } }))
@@ -27,13 +36,26 @@ export default function AdminAttemptReview({ attemptId, participant, examTitle, 
   async function save() {
     setSaving(true)
     setMessage(null)
-    const response = await fetch(`/api/admin/attempts/${attemptId}/review`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reviews: questions.map((question) => ({ question_id: question.id, ...reviews[question.id] })) }) })
+    const payload = { reviews: questions.map((question) => ({ question_id: question.id, ...reviews[question.id] })) }
+    console.groupCollapsed(`[AdminAttemptReview] save ${attemptId}`)
+    console.log('questions loaded:', questions.map((question) => ({ id: question.id, type: question.question_type, points: question.points, answerScore: question.answer?.score, answerManualScore: question.answer?.manual_score })))
+    console.log('reviews state:', reviews)
+    console.log('request payload:', payload)
+    console.groupEnd()
+    const response = await fetch(`/api/admin/attempts/${attemptId}/review`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     const result = await response.json()
-    setMessage(response.ok ? `Review tersimpan. Nilai akhir: ${result.score}/100` : result.error || 'Gagal menyimpan review')
+    console.log(`[AdminAttemptReview] response ${response.status}:`, result)
+    if (response.ok) {
+      setMessage(null)
+      setSuccessToast(`Review tersimpan. Nilai akhir: ${result.score}/100`)
+    } else {
+      setMessage(result.error || 'Gagal menyimpan review')
+    }
     setSaving(false)
   }
 
   return <div className="space-y-6">
+    {successToast && <AdminToast message={successToast} duration={3000} onClose={closeSuccessToast} />}
     <div className="card p-6"><p className="text-sm text-muted-foreground">Peserta</p><h1 className="text-2xl font-bold">{participant}</h1><p className="mt-1 text-muted-foreground">{examTitle}</p></div>
     {message && <p role="status" className="rounded-lg bg-accent/10 p-3 text-sm text-accent">{message}</p>}
     {questions.map((question, index) => {
