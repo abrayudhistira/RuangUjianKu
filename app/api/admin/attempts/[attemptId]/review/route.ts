@@ -47,10 +47,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
   }
 
+  const reviewByQuestion = new Map<string, any>()
   for (const review of body.reviews) {
     const manualScore = review.manual_score === null || review.manual_score === '' || review.manual_score === undefined
       ? null
       : Math.round(Number(review.manual_score))
+    reviewByQuestion.set(review.question_id, { ...review, manualScore })
+
     const { data: updatedAnswers, error } = await (supabase as any).from('answers').update({
       manual_score: manualScore,
       review_note: typeof review.review_note === 'string' ? review.review_note.trim() || null : null,
@@ -66,10 +69,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       error: error?.message ?? null,
     })
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    if (!updatedAnswers?.length) return NextResponse.json({ error: `Jawaban tidak ditemukan atau tidak dapat diperbarui untuk soal ${review.question_id}` }, { status: 409 })
+    if (!updatedAnswers?.length) {
+      const { error: insertError } = await (supabase as any).from('answers').insert({
+        attempt_id: attemptId,
+        question_id: review.question_id,
+        manual_score: manualScore,
+        review_note: typeof review.review_note === 'string' ? review.review_note.trim() || null : null,
+        needs_review: Boolean(review.needs_review),
+        reviewed_by: user.id,
+        reviewed_at: new Date().toISOString(),
+      })
+      if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 })
+      console.log('[AdminReview] answer row created for unanswered question', { questionId: review.question_id, manualScore })
+    }
   }
 
-  // Re-read all answers after saving manual scores
+  // Re-read all answers after saving manual scores. Unanswered questions do not
+  // have an answer row, so their submitted manual review remains in reviewByQuestion.
   const { data: answers } = await (supabase as any).from('answers').select('question_id, selected_option, score, manual_score').eq('attempt_id', attemptId)
   console.log('[AdminReview] answers after update', (answers || []).map((answer: any) => ({
     questionId: answer.question_id,
@@ -82,34 +98,45 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // questions on the fly so unreviewed correct answers aren't lost as zero.
   let total = 0
   const calculationRows: Array<Record<string, unknown>> = []
-  for (const answer of (answers || [])) {
+  const answerByQuestion = new Map<string, any>((answers || []).map((answer: any) => [answer.question_id, answer] as [string, any]))
+  for (const question of (questions || [])) {
+    const answer: any = answerByQuestion.get(question.id)
+    const review = reviewByQuestion.get(question.id)
+
+    if (review?.manualScore !== null && review?.manualScore !== undefined) {
+      const contribution = Number(review.manualScore)
+      total += contribution
+      calculationRows.push({ questionId: question.id, source: answer ? 'manual_score' : 'manual_score_without_answer', value: contribution })
+      continue
+    }
+
+    if (!answer) {
+      calculationRows.push({ questionId: question.id, source: 'no_answer', value: 0 })
+      continue
+    }
+
     if (answer.manual_score !== null && answer.manual_score !== undefined) {
-      // Admin explicitly set a score — use it
       const contribution = Number(answer.manual_score)
       total += contribution
-      calculationRows.push({ questionId: answer.question_id, source: 'manual_score', value: contribution })
-    } else {
-      // No manual score — try to compute the objective score
-      const question = questionMap.get(answer.question_id)
-      if (question && (question.question_type === 'multiple_choice' || question.question_type === 'true_false')) {
-        const correctOption = question.options?.find((o: any) => o.is_correct)
-        if (correctOption && answer.selected_option === correctOption.label) {
-          const autoScore = Number(question.points || 1)
-          total += autoScore
-          calculationRows.push({ questionId: answer.question_id, source: 'auto_correct', value: autoScore })
-          // Persist auto-computed score so future reads are consistent
-          await (supabase as any).from('answers').update({ score: autoScore }).eq('attempt_id', attemptId).eq('question_id', answer.question_id)
-        } else {
-          // Wrong answer — persist 0
-          calculationRows.push({ questionId: answer.question_id, source: 'auto_incorrect', value: 0 })
-          await (supabase as any).from('answers').update({ score: 0 }).eq('attempt_id', attemptId).eq('question_id', answer.question_id)
-        }
+      calculationRows.push({ questionId: question.id, source: 'stored_manual_score', value: contribution })
+      continue
+    }
+
+    if (question.question_type === 'multiple_choice' || question.question_type === 'true_false') {
+      const correctOption = question.options?.find((o: any) => o.is_correct)
+      if (correctOption && answer.selected_option === correctOption.label) {
+        const autoScore = Number(question.points || 1)
+        total += autoScore
+        calculationRows.push({ questionId: question.id, source: 'auto_correct', value: autoScore })
+        await (supabase as any).from('answers').update({ score: autoScore }).eq('attempt_id', attemptId).eq('question_id', question.id)
       } else {
-        // Essay/short-answer without manual score — fall back to stored score
-        const contribution = Number(answer.score ?? 0)
-        total += contribution
-        calculationRows.push({ questionId: answer.question_id, source: 'stored_score', value: contribution })
+        calculationRows.push({ questionId: question.id, source: 'auto_incorrect', value: 0 })
+        await (supabase as any).from('answers').update({ score: 0 }).eq('attempt_id', attemptId).eq('question_id', question.id)
       }
+    } else {
+      const contribution = Number(answer.score ?? 0)
+      total += contribution
+      calculationRows.push({ questionId: question.id, source: 'stored_score', value: contribution })
     }
   }
 
